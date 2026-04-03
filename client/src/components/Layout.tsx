@@ -1,7 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { useTheme } from "./ThemeProvider";
-import { Home, BookOpen, Trophy, Sun, Moon } from "lucide-react";
+import { usePlayer } from "@/App";
+import { Home, Trophy, Sun, Moon, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { href: "/", label: "Главная", icon: Home },
@@ -11,6 +19,7 @@ const navItems = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { name, onLogout } = usePlayer();
 
   return (
     <div className="min-h-screen bg-background" data-testid="app-layout">
@@ -55,6 +64,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
+
+            {/* Player menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg text-muted-foreground gap-1.5 ml-0.5"
+                  data-testid="player-menu-trigger"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline text-sm font-medium max-w-[100px] truncate">
+                    {name}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-semibold text-foreground truncate">{name}</p>
+                  <p className="text-xs text-muted-foreground">Прогресс сохранён</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={onLogout}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  data-testid="button-logout"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Выйти и сбросить
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
         </div>
       </header>

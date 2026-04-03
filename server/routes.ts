@@ -102,11 +102,12 @@ export async function registerRoutes(
       if (unlocked) unlockedAchievements.push(unlocked);
     }
 
-    // "Полиглот" — all 6 lessons completed
+    // "Полиглот" — all 50 lessons completed
     const polyglot = allAchievements.find((a) => a.name === "Полиглот");
     if (polyglot && !polyglot.unlockedAt) {
       const completedLessons = allProgress.filter((p) => p.score > 0).length;
-      if (completedLessons >= 6) {
+      const totalLessons = storage.getLessons().length;
+      if (completedLessons >= totalLessons) {
         const unlocked = storage.unlockAchievement(polyglot.id);
         if (unlocked) unlockedAchievements.push(unlocked);
       }
@@ -130,6 +131,47 @@ export async function registerRoutes(
     const wordMaster = allAchievements.find((a) => a.name === "Мастер слов");
     if (wordMaster && !wordMaster.unlockedAt && stats.wordsLearned >= 50) {
       const unlocked = storage.unlockAchievement(wordMaster.id);
+      if (unlocked) unlockedAchievements.push(unlocked);
+    }
+
+    // "На полпути" — 25 lessons completed
+    const halfway = allAchievements.find((a) => a.name === "На полпути");
+    if (halfway && !halfway.unlockedAt) {
+      const completedLessons = allProgress.filter((p) => p.score > 0).length;
+      if (completedLessons >= 25) {
+        const unlocked = storage.unlockAchievement(halfway.id);
+        if (unlocked) unlockedAchievements.push(unlocked);
+      }
+    }
+
+    // "Знаток" — 100% on 5 quizzes
+    const expert = allAchievements.find((a) => a.name === "Знаток 💯");
+    if (expert && !expert.unlockedAt) {
+      const perfectQuizzes = allProgress.filter((p) => p.score === 100).length;
+      if (perfectQuizzes >= 5) {
+        const unlocked = storage.unlockAchievement(expert.id);
+        if (unlocked) unlockedAchievements.push(unlocked);
+      }
+    }
+
+    // "Марафонец" — 7-day streak
+    const marathon = allAchievements.find((a) => a.name === "Марафонец");
+    if (marathon && !marathon.unlockedAt && stats.currentStreak >= 7) {
+      const unlocked = storage.unlockAchievement(marathon.id);
+      if (unlocked) unlockedAchievements.push(unlocked);
+    }
+
+    // "Эрудит" — 200 words learned
+    const scholar = allAchievements.find((a) => a.name === "Эрудит");
+    if (scholar && !scholar.unlockedAt && stats.wordsLearned >= 200) {
+      const unlocked = storage.unlockAchievement(scholar.id);
+      if (unlocked) unlockedAchievements.push(unlocked);
+    }
+
+    // "Легенда" — 5000 XP
+    const legend = allAchievements.find((a) => a.name === "Легенда");
+    if (legend && !legend.unlockedAt && stats.totalXp >= 5000) {
+      const unlocked = storage.unlockAchievement(legend.id);
       if (unlocked) unlockedAchievements.push(unlocked);
     }
 

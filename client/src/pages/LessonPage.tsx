@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
-import { ArrowLeft, Volume2, ChevronRight, PlayCircle } from "lucide-react";
+import { ArrowLeft, Volume2, ChevronRight, PlayCircle, Mic } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -109,11 +109,21 @@ export default function LessonPage() {
         })}
       </div>
 
-      {/* Start quiz button */}
-      <div className="pt-2 pb-4">
+      {/* Action buttons */}
+      <div className="pt-2 pb-4 space-y-2.5">
+        <Link href={`/speak/${lessonId}`}>
+          <Button
+            variant="outline"
+            className="w-full h-12 text-sm font-semibold rounded-xl gap-2 border-primary/30 text-primary hover:bg-primary/5"
+            data-testid="button-start-speak"
+          >
+            <Mic className="h-5 w-5" />
+            Тренировка речи
+          </Button>
+        </Link>
         <Link href={`/practice/${lessonId}`}>
           <Button
-            className="w-full h-12 text-sm font-semibold rounded-xl gap-2"
+            className="w-full h-12 text-sm font-semibold rounded-xl gap-2 mt-2.5"
             data-testid="button-start-quiz"
           >
             <PlayCircle className="h-5 w-5" />

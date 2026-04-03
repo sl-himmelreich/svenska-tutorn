@@ -4,16 +4,30 @@ import { Flame, Zap, BookOpen, ChevronRight, GraduationCap } from "lucide-react"
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePlayer } from "@/App";
 import type { Lesson, UserStats } from "@shared/schema";
 
 const lessonEmojis: Record<number, string> = {
-  1: "👋",
-  2: "👨‍👩‍👧‍👦",
-  3: "🍎",
-  4: "📚",
-  5: "💬",
-  6: "🔢",
+  1: "👋", 2: "👨‍👩‍👧‍👦", 3: "🍎", 4: "📚", 5: "💬",
+  6: "🔢", 7: "🐾", 8: "👕", 9: "🫀", 10: "🏠",
+  11: "🌦️", 12: "🚌", 13: "🕐", 14: "⚽", 15: "🛒",
+  16: "👩‍⚕️", 17: "😊", 18: "🍽️", 19: "✈️", 20: "🎉",
+  21: "🍊", 22: "📅", 23: "🎵", 24: "💻", 25: "🏥",
+  26: "🏙️", 27: "📍", 28: "🏃", 29: "✨", 30: "🪑",
+  31: "🍴", 32: "🎮", 33: "🐛", 34: "🐠", 35: "💊",
+  36: "🧱", 37: "🔷", 38: "🎸", 39: "🏖️", 40: "⛷️",
+  41: "🇸🇪", 42: "↔️", 43: "🤝", 44: "❓", 45: "🌅",
+  46: "📐", 47: "📖", 48: "🚀", 49: "🏰", 50: "🎈",
 };
+
+// Group lessons into sections
+const sections = [
+  { title: "Основы", range: [1, 10] as const },
+  { title: "Мир вокруг", range: [11, 20] as const },
+  { title: "Углубляемся", range: [21, 30] as const },
+  { title: "Расширяем", range: [31, 40] as const },
+  { title: "Продвинутый", range: [41, 50] as const },
+];
 
 interface LessonWithProgress extends Lesson {
   progress: number;
@@ -21,6 +35,7 @@ interface LessonWithProgress extends Lesson {
 }
 
 export default function Dashboard() {
+  const { name } = usePlayer();
   const { data: lessons, isLoading: lessonsLoading } = useQuery<LessonWithProgress[]>({
     queryKey: ["/api/lessons"],
   });
@@ -34,7 +49,7 @@ export default function Dashboard() {
   }
 
   const completedCount = lessons?.filter((l) => l.completed).length ?? 0;
-  const totalLessons = lessons?.length ?? 6;
+  const totalLessons = lessons?.length ?? 50;
   const overallProgress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
   return (
@@ -42,7 +57,7 @@ export default function Dashboard() {
       {/* Greeting */}
       <div>
         <h1 className="text-xl font-bold text-foreground" data-testid="text-greeting">
-          Привет! 🇸🇪
+          Привет, {name}! 🇸🇪
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Учи шведский — это весело!
@@ -80,48 +95,63 @@ export default function Dashboard() {
         </p>
       </Card>
 
-      {/* Lesson cards */}
-      <div>
-        <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-          <GraduationCap className="h-4 w-4 text-primary" />
-          Уроки
-        </h2>
-        <div className="space-y-2.5">
-          {lessons?.map((lesson) => (
-            <Link key={lesson.id} href={`/lesson/${lesson.id}`}>
-              <Card
-                className="p-4 bg-card border border-card-border rounded-xl cursor-pointer transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.99]"
-                data-testid={`card-lesson-${lesson.id}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">
-                    {lessonEmojis[lesson.id] ?? "📖"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-foreground truncate">
-                        {lesson.titleSv}
-                      </h3>
-                      {lesson.completed && (
-                        <span className="flex-shrink-0 text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
-                          ✓
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{lesson.titleRu}</p>
-                    {lesson.progress > 0 && (
-                      <div className="mt-1.5">
-                        <Progress value={lesson.progress} className="h-1.5 rounded-full" />
+      {/* Lesson sections */}
+      {sections.map((section) => {
+        const sectionLessons = lessons?.filter(
+          (l) => l.order >= section.range[0] && l.order <= section.range[1]
+        ) ?? [];
+        const sectionCompleted = sectionLessons.filter((l) => l.completed).length;
+        const sectionTotal = sectionLessons.length;
+
+        return (
+          <div key={section.title}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                {section.title}
+              </h2>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {sectionCompleted}/{sectionTotal}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {sectionLessons.map((lesson) => (
+                <Link key={lesson.id} href={`/lesson/${lesson.id}`}>
+                  <Card
+                    className="p-3.5 bg-card border border-card-border rounded-xl cursor-pointer transition-all hover:shadow-md hover:border-primary/30 active:scale-[0.99]"
+                    data-testid={`card-lesson-${lesson.id}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-base">
+                        {lessonEmojis[lesson.order] ?? "📖"}
                       </div>
-                    )}
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-foreground truncate">
+                            {lesson.titleSv}
+                          </h3>
+                          {lesson.completed && (
+                            <span className="flex-shrink-0 text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-full ml-2">
+                              ✓
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{lesson.titleRu}</p>
+                        {lesson.progress > 0 && (
+                          <div className="mt-1.5">
+                            <Progress value={lesson.progress} className="h-1 rounded-full" />
+                          </div>
+                        )}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -139,9 +169,9 @@ function DashboardSkeleton() {
         ))}
       </div>
       <Skeleton className="h-20 rounded-xl" />
-      <div className="space-y-2.5">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="h-16 rounded-xl" />
+      <div className="space-y-2">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <Skeleton key={i} className="h-14 rounded-xl" />
         ))}
       </div>
     </div>
