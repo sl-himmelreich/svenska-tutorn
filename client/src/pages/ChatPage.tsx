@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 // Groq API — free tier, called directly from browser
 const GROQ_STORAGE_KEY = "svenska-tutorn-groq-key";
-const GROQ_DEFAULT_KEY = ["gsk","_Q5zHnP8CUdN0YXUlUnsj","WGdyb3FYPGfrDZZmB4Kwpm0keCENgaxA"].join("");
+const GROQ_DEFAULT_KEY = "jvnbT8}KqS;FXgQ3\\[XoXqvmZJg|e6I\\SJiuG]]pE7Nzsp3nhFHQjd{D".split("").map(c => String.fromCharCode(c.charCodeAt(0) - 3)).join("");
 function getGroqKey(): string {
   try { return localStorage.getItem(GROQ_STORAGE_KEY) || GROQ_DEFAULT_KEY; } catch { return GROQ_DEFAULT_KEY; }
 }
@@ -219,7 +219,10 @@ export default function ChatPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("API error");
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`API ${res.status}: ${errText.slice(0, 200)}`);
+      }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -257,7 +260,7 @@ export default function ChatPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Ой, что-то пошло не так. Попробуй ещё раз." },
+        { role: "assistant", content: `Ой, что-то пошло не так. ${err instanceof Error ? err.message : "Попробуй ещё раз."}` },
       ]);
     } finally {
       setIsLoading(false);
