@@ -25,6 +25,7 @@ interface SpeechState {
 
 function useSpeechRecognition() {
   const recognitionRef = useRef<any>(null);
+  const stoppingRef = useRef(false);
   const [state, setState] = useState<SpeechState>({
     isListening: false,
     transcript: "",
@@ -42,11 +43,19 @@ function useSpeechRecognition() {
       return;
     }
 
+    // Stop any previous session
+    if (recognitionRef.current) {
+      stoppingRef.current = true;
+      try { recognitionRef.current.abort(); } catch (_) {}
+    }
+
+    stoppingRef.current = false;
+
     const recognition = new SpeechRecognition();
     recognition.lang = "sv-SE";
     recognition.interimResults = true;
     recognition.maxAlternatives = 3;
-    recognition.continuous = false;
+    recognition.continuous = true; // Keep listening until user finishes
 
     recognition.onstart = () => {
       setState(s => ({ ...s, isListening: true, transcript: "", confidence: 0, error: null }));
@@ -60,18 +69,19 @@ function useSpeechRecognition() {
         if (result.isFinal) {
           finalTranscript = result[0].transcript;
           bestConfidence = result[0].confidence;
-          // Also check alternatives for a better match
           for (let a = 0; a < result.length; a++) {
             if (result[a].confidence > bestConfidence) {
               bestConfidence = result[a].confidence;
             }
           }
         } else {
-          // interim
           setState(s => ({ ...s, transcript: result[0].transcript }));
         }
       }
       if (finalTranscript) {
+        // Got a final result — stop listening and return it
+        stoppingRef.current = true;
+        try { recognition.stop(); } catch (_) {}
         setState(s => ({
           ...s,
           transcript: finalTranscript,
@@ -82,14 +92,32 @@ function useSpeechRecognition() {
     };
 
     recognition.onerror = (event: any) => {
-      let errMsg = "Ошибка распознавания";
-      if (event.error === "no-speech") errMsg = "Речь не обнаружена. Попробуй ещё раз.";
-      else if (event.error === "not-allowed") errMsg = "Доступ к микрофону запрещён. Разреши в настройках браузера.";
-      else if (event.error === "network") errMsg = "Нет подключения к интернету.";
-      setState(s => ({ ...s, error: errMsg, isListening: false }));
+      // 'no-speech' — silently ignore, the engine will restart via onend
+      if (event.error === "no-speech" || event.error === "aborted") {
+        return;
+      }
+      if (event.error === "not-allowed") {
+        setState(s => ({ ...s, error: "Доступ к микрофону запрещён. Разреши в настройках браузера.", isListening: false }));
+        stoppingRef.current = true;
+      } else if (event.error === "network") {
+        setState(s => ({ ...s, error: "Нет подключения к интернету.", isListening: false }));
+        stoppingRef.current = true;
+      } else {
+        setState(s => ({ ...s, error: "Ошибка распознавания.", isListening: false }));
+        stoppingRef.current = true;
+      }
     };
 
     recognition.onend = () => {
+      // If we didn't explicitly stop, auto-restart (handles no-speech timeout)
+      if (!stoppingRef.current) {
+        try {
+          recognition.start();
+        } catch (_) {
+          setState(s => ({ ...s, isListening: false }));
+        }
+        return;
+      }
       setState(s => ({ ...s, isListening: false }));
     };
 
@@ -98,8 +126,9 @@ function useSpeechRecognition() {
   }, []);
 
   const stop = useCallback(() => {
+    stoppingRef.current = true;
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try { recognitionRef.current.stop(); } catch (_) {}
     }
   }, []);
 

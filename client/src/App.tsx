@@ -11,6 +11,7 @@ import LessonPage from "@/pages/LessonPage";
 import PracticePage from "@/pages/PracticePage";
 import AchievementsPage from "@/pages/AchievementsPage";
 import SpeakPage from "@/pages/SpeakPage";
+import ChatPage from "@/pages/ChatPage";
 import WelcomePage from "@/pages/WelcomePage";
 import NotFound from "@/pages/not-found";
 import { useState, useCallback } from "react";
@@ -24,6 +25,7 @@ function AppRouter() {
         <Route path="/lesson/:id" component={LessonPage} />
         <Route path="/practice/:id" component={PracticePage} />
         <Route path="/speak/:id" component={SpeakPage} />
+        <Route path="/chat" component={ChatPage} />
         <Route path="/achievements" component={AchievementsPage} />
         <Route component={NotFound} />
       </Switch>

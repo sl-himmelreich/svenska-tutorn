@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useTheme } from "./ThemeProvider";
 import { usePlayer } from "@/App";
-import { Home, Trophy, Sun, Moon, LogOut, User } from "lucide-react";
+import { Home, Trophy, Sun, Moon, LogOut, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
 
 const navItems = [
   { href: "/", label: "Главная", icon: Home },
+  { href: "/chat", label: "AI чат", icon: MessageCircle },
   { href: "/achievements", label: "Достижения", icon: Trophy },
 ];
 
@@ -101,7 +102,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main className={`mx-auto max-w-3xl ${location === "/chat" ? "px-2" : "px-4 py-6"}`}>
         {children}
       </main>
     </div>
