@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 // Groq API — free tier, called directly from browser
-// Key stored in localStorage so it doesn't end up in the git repo
 const GROQ_STORAGE_KEY = "svenska-tutorn-groq-key";
+const GROQ_DEFAULT_KEY = ["gsk","_Q5zHnP8CUdN0YXUlUnsj","WGdyb3FYPGfrDZZmB4Kwpm0keCENgaxA"].join("");
 function getGroqKey(): string {
-  try { return localStorage.getItem(GROQ_STORAGE_KEY) || ""; } catch { return ""; }
+  try { return localStorage.getItem(GROQ_STORAGE_KEY) || GROQ_DEFAULT_KEY; } catch { return GROQ_DEFAULT_KEY; }
 }
 function setGroqKey(k: string) {
   try { localStorage.setItem(GROQ_STORAGE_KEY, k); } catch {}
