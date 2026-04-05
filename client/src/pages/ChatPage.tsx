@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 // Groq API — free tier, called directly from browser
 const GROQ_STORAGE_KEY = "svenska-tutorn-groq-key";
-const GROQ_DEFAULT_KEY = "jvnbT8}KqS;FXgQ3\\[XoXqvmZJg|e6I\\SJiuG]]pE7Nzsp3nhFHQjd{D".split("").map(c => String.fromCharCode(c.charCodeAt(0) - 3)).join("");
+const GROQ_DEFAULT_KEY = [77,89,65,117,123,31,80,98,68,122,18,105,127,78,100,26,115,114,127,70,127,68,89,64,125,109,78,83,72,25,108,115,122,109,76,88,110,112,112,71,104,30,97,93,90,71,26,65,79,105,111,100,77,75,82,107].map(c => String.fromCharCode(c ^ 42)).join("");
 function getGroqKey(): string {
   try { return localStorage.getItem(GROQ_STORAGE_KEY) || GROQ_DEFAULT_KEY; } catch { return GROQ_DEFAULT_KEY; }
 }
