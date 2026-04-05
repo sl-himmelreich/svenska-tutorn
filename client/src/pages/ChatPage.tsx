@@ -8,7 +8,11 @@ import { Card } from "@/components/ui/card";
 const GROQ_STORAGE_KEY = "svenska-tutorn-groq-key";
 const GROQ_DEFAULT_KEY = [77,89,65,117,123,31,80,98,68,122,18,105,127,78,100,26,115,114,127,70,127,68,89,64,125,109,78,83,72,25,108,115,122,109,76,88,110,112,112,71,104,30,97,93,90,71,26,65,79,105,111,100,77,75,82,107].map(c => String.fromCharCode(c ^ 42)).join("");
 function getGroqKey(): string {
-  try { return localStorage.getItem(GROQ_STORAGE_KEY) || GROQ_DEFAULT_KEY; } catch { return GROQ_DEFAULT_KEY; }
+  try {
+    const stored = localStorage.getItem(GROQ_STORAGE_KEY);
+    if (stored && stored.startsWith("gsk_")) return stored;
+    return GROQ_DEFAULT_KEY;
+  } catch { return GROQ_DEFAULT_KEY; }
 }
 function setGroqKey(k: string) {
   try { localStorage.setItem(GROQ_STORAGE_KEY, k); } catch {}
@@ -203,12 +207,13 @@ export default function ChatPage() {
       apiMessages.push({ role: "user", content: "Привет!" });
     }
 
+    const currentKey = getGroqKey();
     try {
       const res = await fetch(GROQ_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${getGroqKey()}`,
+          "Authorization": `Bearer ${currentKey}`,
         },
         body: JSON.stringify({
           model: GROQ_MODEL,
@@ -260,7 +265,7 @@ export default function ChatPage() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Ой, что-то пошло не так. ${err instanceof Error ? err.message : "Попробуй ещё раз."}` },
+        { role: "assistant", content: `Ошибка: ${err instanceof Error ? err.message : "Неизвестная ошибка"}. Ключ: ${currentKey ? currentKey.slice(0, 8) + "..." : "пустой"}` },
       ]);
     } finally {
       setIsLoading(false);
