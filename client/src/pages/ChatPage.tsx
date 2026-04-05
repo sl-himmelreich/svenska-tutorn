@@ -5,8 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 // Groq API — free tier, called directly from browser
-// Key injected at build time via VITE_GROQ_KEY env variable
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_KEY || "";
+// Key stored in localStorage so it doesn't end up in the git repo
+const GROQ_STORAGE_KEY = "svenska-tutorn-groq-key";
+function getGroqKey(): string {
+  try { return localStorage.getItem(GROQ_STORAGE_KEY) || ""; } catch { return ""; }
+}
+function setGroqKey(k: string) {
+  try { localStorage.setItem(GROQ_STORAGE_KEY, k); } catch {}
+}
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
@@ -144,6 +150,20 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [started, setStarted] = useState(false);
+  const [hasKey, setHasKey] = useState(() => {
+    // Auto-set key from URL hash param: #/chat?k=gsk_...
+    const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
+    const urlKey = params.get("k");
+    if (urlKey?.startsWith("gsk_")) {
+      setGroqKey(urlKey);
+      // Clean URL
+      const cleanHash = window.location.hash.split("?")[0];
+      window.history.replaceState(null, "", window.location.pathname + cleanHash);
+      return true;
+    }
+    return !!getGroqKey();
+  });
+  const [keyInput, setKeyInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const speech = useChatSpeechRecognition(lang);
@@ -188,7 +208,7 @@ export default function ChatPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_API_KEY}`,
+          "Authorization": `Bearer ${getGroqKey()}`,
         },
         body: JSON.stringify({
           model: GROQ_MODEL,
@@ -276,6 +296,48 @@ export default function ChatPage() {
       setStarted(true);
       sendToAI([]);
     }, 100);
+  }
+
+  // Key setup screen
+  if (!hasKey) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-3.5rem)] p-6 gap-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-2xl">🤖</span>
+        </div>
+        <h2 className="text-lg font-bold text-foreground">AI Чат с Астрид</h2>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          Для работы AI чата нужен бесплатный ключ Groq API.
+          Получи его на{" "}
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="text-primary underline">
+            console.groq.com/keys
+          </a>
+        </p>
+        <input
+          className="w-full max-w-sm px-3 py-2 rounded-lg border border-border bg-background text-sm"
+          placeholder="Вставь ключ gsk_..."
+          value={keyInput}
+          onChange={(e) => setKeyInput(e.target.value)}
+        />
+        <Button
+          onClick={() => {
+            if (keyInput.startsWith("gsk_")) {
+              setGroqKey(keyInput.trim());
+              setHasKey(true);
+            }
+          }}
+          disabled={!keyInput.startsWith("gsk_")}
+          className="w-full max-w-sm"
+        >
+          Сохранить и начать
+        </Button>
+        <Link href="/">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Назад
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
