@@ -92,8 +92,8 @@ function useSpeechRecognition() {
     };
 
     recognition.onerror = (event: any) => {
-      // 'no-speech' — silently ignore, the engine will restart via onend
-      if (event.error === "no-speech" || event.error === "aborted") {
+      // Silently ignore no-speech / aborted / audio-capture — auto-restart via onend
+      if (event.error === "no-speech" || event.error === "aborted" || event.error === "audio-capture") {
         return;
       }
       if (event.error === "not-allowed") {
@@ -102,10 +102,8 @@ function useSpeechRecognition() {
       } else if (event.error === "network") {
         setState(s => ({ ...s, error: "Нет подключения к интернету.", isListening: false }));
         stoppingRef.current = true;
-      } else {
-        setState(s => ({ ...s, error: "Ошибка распознавания.", isListening: false }));
-        stoppingRef.current = true;
       }
+      // All other errors — just ignore and let auto-restart handle it
     };
 
     recognition.onend = () => {
@@ -498,7 +496,17 @@ export default function SpeakPage() {
                   </>
                 )}
               </div>
-              {!speech.isListening && !speech.transcript && (
+              {speech.isListening ? (
+                <Button
+                  className="w-full h-10 mt-3 rounded-lg gap-2"
+                  variant="secondary"
+                  onClick={() => speech.stop()}
+                  data-testid="button-stop-mic"
+                >
+                  <MicOff className="h-4 w-4" />
+                  Остановить
+                </Button>
+              ) : !speech.transcript ? (
                 <Button
                   className="w-full h-10 mt-3 rounded-lg gap-2"
                   onClick={() => speech.start()}
@@ -508,7 +516,7 @@ export default function SpeakPage() {
                   <Mic className="h-4 w-4" />
                   Начать запись
                 </Button>
-              )}
+              ) : null}
             </Card>
           </div>
         )}
